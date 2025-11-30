@@ -20,7 +20,7 @@ function Header() {
   );
 }
 
-export default function TradingPage() {
+export default function TradingLivePage() {
   return (
     <DataProvider>
       <div className="flex h-screen w-full flex-col bg-background text-foreground">

@@ -1,0 +1,8 @@
+firebase-functions
+firebase-admin
+pandas
+numpy
+yfinance
+ta
+flask
+flask_cors
