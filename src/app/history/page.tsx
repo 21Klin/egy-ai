@@ -1,40 +1,11 @@
-const mockTrades = [
-  {
-    id: 1,
-    time: "2025-11-29 11:12",
-    side: "BUY" as const,
-    price: 68000,
-    size: 0.015,
-    profit: 18.5,
-  },
-  {
-    id: 2,
-    time: "2025-11-29 11:35",
-    side: "SELL" as const,
-    price: 68120,
-    size: 0.015,
-    profit: 12.1,
-  },
-  {
-    id: 3,
-    time: "2025-11-29 12:02",
-    side: "SELL" as const,
-    price: 67900,
-    size: 0.02,
-    profit: -10.4,
-  },
-  {
-    id: 4,
-    time: "2025-11-29 12:21",
-    side: "BUY" as const,
-    price: 67940,
-    size: 0.018,
-    profit: 7.9,
-  },
-];
+"use client";
+
+import { useStore } from "@/lib/store";
 
 export default function Page() {
-  const totalProfit = mockTrades.reduce((sum, t) => sum + t.profit, 0);
+  const botHistory = useStore((state) => state.botHistory);
+
+  const totalProfit = botHistory.reduce((sum, t) => sum + t.profit, 0);
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-slate-950 px-4 py-8 text-slate-50">
@@ -45,17 +16,16 @@ export default function Page() {
             Bot history
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-            Every simulated trade,{" "}
+            Every live trade,{" "}
             <span className="bg-gradient-to-r from-emerald-300 to-purple-400 bg-clip-text text-transparent">
               fully visible
             </span>
             .
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-slate-300 sm:text-base">
-            This table shows example trades made by the bot: when the trade
+            This table shows the trades made by the GA bot: when the trade
             happened, whether it was a BUY or SELL, at what price, the position
-            size and the profit or loss. In the full version, the data here is
-            filled directly from the bot&apos;s log.
+            size and the realized profit or loss in USDT.
           </p>
         </section>
 
@@ -72,27 +42,27 @@ export default function Page() {
               {totalProfit.toFixed(2)} USDT
             </div>
             <p className="mt-1 text-[11px] text-slate-400">
-              Sum of all demo trades shown below.
+              Sum of all closed bot positions in this session.
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4">
             <div className="text-xs text-slate-400">Number of trades</div>
             <div className="mt-1 font-mono text-lg text-slate-100">
-              {mockTrades.length}
+              {botHistory.length}
             </div>
             <p className="mt-1 text-[11px] text-slate-400">
-              Each row is one complete simulated position.
+              Each row below is one full position opened and closed by the bot.
             </p>
           </div>
 
           <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4">
-            <div className="text-xs text-slate-400">Purpose</div>
+            <div className="text-xs text-slate-400">Status</div>
             <div className="mt-1 text-sm text-slate-100">
-              Transparency for judges
+              Live session telemetry
             </div>
             <p className="mt-1 text-[11px] text-slate-400">
-              Makes it easy to inspect and explain what the bot is doing.
+              Data resets when the page or app is refreshed.
             </p>
           </div>
         </section>
@@ -100,8 +70,8 @@ export default function Page() {
         {/* Table */}
         <section className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4">
           <div className="mb-3 flex items-center justify-between text-xs text-slate-400">
-            <span>Demo trade log</span>
-            <span>Connected to BTC/USDT strategy in full version</span>
+            <span>Live bot trade log</span>
+            <span>Connected to GA strategy on BTC/USDT</span>
           </div>
 
           <div className="overflow-x-auto">
@@ -110,57 +80,69 @@ export default function Page() {
                 <tr className="border-b border-slate-800 text-[11px] uppercase tracking-[0.15em] text-slate-400">
                   <th className="px-3 py-2 text-left">Time</th>
                   <th className="px-3 py-2 text-left">Side</th>
-                  <th className="px-3 py-2 text-left">Price (USDT)</th>
+                  <th className="px-3 py-2 text-left">Entry price (USDT)</th>
                   <th className="px-3 py-2 text-left">Size (BTC)</th>
                   <th className="px-3 py-2 text-left">Profit (USDT)</th>
                 </tr>
               </thead>
               <tbody>
-                {mockTrades.map((t) => (
-                  <tr
-                    key={t.id}
-                    className="border-b border-slate-900/80 hover:bg-slate-900/40"
-                  >
-                    <td className="px-3 py-2 font-mono text-[11px] text-slate-200">
-                      {t.time}
-                    </td>
-                    <td className="px-3 py-2">
-                      <span
-                        className={`rounded-full px-2 py-[3px] text-[11px] font-semibold ${
-                          t.side === "BUY"
-                            ? "bg-emerald-500/15 text-emerald-300"
-                            : "bg-red-500/15 text-red-300"
-                        }`}
-                      >
-                        {t.side}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 font-mono text-[11px] text-slate-200">
-                      {t.price.toLocaleString("en-US", {
-                        maximumFractionDigits: 2,
-                      })}
-                    </td>
-                    <td className="px-3 py-2 font-mono text-[11px] text-slate-200">
-                      {t.size.toFixed(4)}
-                    </td>
+                {botHistory.length === 0 ? (
+                  <tr>
                     <td
-                      className={`px-3 py-2 font-mono text-[11px] ${
-                        t.profit >= 0 ? "text-emerald-300" : "text-red-300"
-                      }`}
+                      colSpan={5}
+                      className="px-3 py-6 text-center text-xs text-slate-500"
                     >
-                      {t.profit >= 0 ? "+" : ""}
-                      {t.profit.toFixed(2)}
+                      No bot trades yet. Start the GA bot on the Trading page
+                      and let it close at least one position.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  botHistory.map((trade) => {
+                    const isWin = trade.profit >= 0;
+                    return (
+                      <tr
+                        key={trade.id}
+                        className="border-b border-slate-900/80 bg-slate-950/40 last:border-0 hover:bg-slate-900/60"
+                      >
+                        <td className="px-3 py-2 font-mono text-[11px] sm:text-xs">
+                          {new Date(trade.time).toLocaleString()}
+                        </td>
+                        <td className="px-3 py-2">
+                          <span
+                            className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                              trade.side === "BUY"
+                                ? "bg-emerald-500/10 text-emerald-300"
+                                : "bg-red-500/10 text-red-300"
+                            }`}
+                          >
+                            {trade.side}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2 font-mono">
+                          {trade.price.toFixed(2)}
+                        </td>
+                        <td className="px-3 py-2 font-mono">
+                          {trade.size.toFixed(5)}
+                        </td>
+                        <td
+                          className={`px-3 py-2 font-mono ${
+                            isWin ? "text-emerald-300" : "text-red-300"
+                          }`}
+                        >
+                          {isWin ? "+" : ""}
+                          {trade.profit.toFixed(2)}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>
 
           <p className="mt-3 text-[11px] text-slate-400">
-            In the real trading run, this page is populated directly from the
-            bot&apos;s execution log so every entry and exit can be explained
-            line by line.
+            This page is powered by the bot&apos;s own execution log, so every
+            entry and exit can be inspected line by line.
           </p>
         </section>
       </div>

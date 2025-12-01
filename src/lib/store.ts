@@ -8,8 +8,8 @@ export interface Position {
   entryPrice: number;
   direction: 'buy' | 'sell';
   timestamp: number;
-  size?: number;        // margin used for leveraged positions
-  leverage?: number;    // leverage used
+  size?: number; // margin used for leveraged positions
+  leverage?: number; // leverage used
 }
 
 export interface Trade {
@@ -17,6 +17,15 @@ export interface Trade {
   quantity: number;
   time: number;
   isMaker: boolean; // true if buyer is maker
+}
+
+export interface BotHistoryEntry {
+  id: number;
+  time: number;
+  side: 'BUY' | 'SELL';
+  price: number; // entry/execute price
+  size: number; // size in BTC
+  profit: number; // realized PnL in USDT
 }
 
 export interface Kline {
@@ -101,7 +110,14 @@ function randomGenotype(): Genotype {
       Math.random() * (Math.log10(0.05) - Math.log10(1e-4)));
   const stop_loss = take_profit * (0.5 + Math.random() * 1.5);
   const cooldown = Math.floor(Math.random() * 4);
-  return new Genotype(short_p, long_p, entry_thr, take_profit, stop_loss, cooldown);
+  return new Genotype(
+    short_p,
+    long_p,
+    entry_thr,
+    take_profit,
+    stop_loss,
+    cooldown
+  );
 }
 
 function createIndividual(genotype: Genotype, id: number): Individual {
@@ -131,6 +147,7 @@ interface AppState {
   sparklineData: { time: number; value: number }[];
   depthData: { bids: Order[]; asks: Order[] };
   trades: Trade[];
+  botHistory: BotHistoryEntry[];
 
   usdtBalance: number;
   btcBalance: number;
@@ -150,6 +167,15 @@ interface AppActions {
   setSentiment: (value: number) => void;
   addTrade: (trade: Trade) => void;
 
+  addBotHistoryEntry: (entry: {
+    time: number;
+    side: 'BUY' | 'SELL';
+    price: number;
+    size: number;
+    profit: number;
+  }) => void;
+  clearBotHistory: () => void;
+
   enterPosition: (direction: 'buy' | 'sell') => void;
   closePosition: () => void;
   updatePnl: () => void;
@@ -159,10 +185,10 @@ interface AppActions {
 
   // leverage controls
   setLeverage: (leverage: number) => void;
+  setPositionSize: (size: number) => void;
 
-  // GA bots simulators (frontend only)
+  // GA bot simulator (frontend only)
   simulateGABotTrade: () => void;
-  simulateProfitBotTrade: () => void;
 
   // big GA autotrader
   startGA: () => void;
@@ -190,6 +216,7 @@ export const useStore = create<AppState & AppActions>((set, get) => ({
   sparklineData: [],
   depthData: { bids: [], asks: [] },
   trades: [],
+  botHistory: [],
 
   usdtBalance: 10000,
   btcBalance: 0,
@@ -272,34 +299,59 @@ export const useStore = create<AppState & AppActions>((set, get) => ({
     });
   },
 
+  addBotHistoryEntry: (entry) =>
+    set((state) => {
+      const nextId =
+        state.botHistory.length > 0 ? state.botHistory[0].id + 1 : 1;
+
+      const newEntry: BotHistoryEntry = {
+        id: nextId,
+        ...entry,
+      };
+
+      const history = [newEntry, ...state.botHistory];
+      if (history.length > 100) history.pop(); // keep last 100 trades
+
+      return { botHistory: history };
+    }),
+
+  clearBotHistory: () => set({ botHistory: [] }),
+
   // --------- spot + leverage trading ---------
 
   enterPosition: (direction) => {
-    const { price, position, usdtBalance, positionSize, leverage } = get();
-    if (price > 0 && !position && usdtBalance >= positionSize) {
-      set({
-        position: {
-          entryPrice: price,
-          direction,
-          timestamp: Date.now(),
-          size: positionSize,
-          leverage,
-        },
-        usdtBalance: usdtBalance - positionSize,
-        pnl: 0,
-      });
-    }
-  },
+  const { price, position, positionSize, leverage } = get();
 
-  closePosition: () => {
-    const { pnl, position } = get();
-    if (!position) return;
-    set((state) => ({
-      position: null,
-      pnl: 0,
-      usdtBalance: state.usdtBalance + (position.size ?? 0) + pnl,
-    }));
-  },
+  // Don't open a new one if already in a position
+  if (price <= 0 || position) return;
+
+  // For leverage we aren't actually buying spot BTC,
+  // we're just opening a virtual position with margin = positionSize
+  set({
+    position: {
+      entryPrice: price,
+      direction,
+      timestamp: Date.now(),
+      size: positionSize,   // margin used
+      leverage,             // leverage multiplier
+    },
+    pnl: 0,
+  });
+},
+
+
+ closePosition: () => {
+  const { pnl, position } = get();
+  if (!position) return;
+
+  set((state) => ({
+    position: null,
+    pnl: 0,
+    // Realized profit/loss gets added to your USDT balance
+    usdtBalance: state.usdtBalance + pnl,
+  }));
+},
+
 
   updatePnl: () => {
     const { position, price } = get();
@@ -342,20 +394,75 @@ export const useStore = create<AppState & AppActions>((set, get) => ({
   },
 
   setLeverage: (leverage) => set({ leverage }),
+  setPositionSize: (positionSize) => set({ positionSize }),
 
-  // --------- simple simulators (frontend-only) ---------
+  // --------- simple GA bot simulator (frontend-only) ---------
 
+  // GA Bot: every tick it randomly chooses BUY or SELL and a size between 1–200 USDT
   simulateGABotTrade: () => {
-    set((state) => {
-      const randomChange = (Math.random() - 0.5) * 100; // -50..+50
-      return { usdtBalance: state.usdtBalance + randomChange };
-    });
-  },
+    const {
+      price,
+      usdtBalance,
+      btcBalance,
+      buyBtc,
+      sellBtc,
+      addBotHistoryEntry,
+    } = get();
 
-  simulateProfitBotTrade: () => {
-    set((state) => {
-      const randomProfit = Math.random() * 50; // 0..50
-      return { usdtBalance: state.usdtBalance + randomProfit };
+    // no valid price yet
+    if (price <= 0) return;
+
+    // total wallet value before the trade
+    const equityBefore = usdtBalance + btcBalance * price;
+
+    // random direction: 50% buy, 50% sell
+    const direction = Math.random() < 0.5 ? 'buy' : 'sell';
+
+    // random trade size between 1 and 200 USDT
+    const tradeUsd = 1 + Math.random() * 199;
+
+    let executed = false;
+    let executedBtcSize = 0;
+
+    if (direction === 'buy') {
+      const usdAmount = Math.min(tradeUsd, usdtBalance);
+      // skip if wallet basically empty
+      if (usdAmount > 1) {
+        const btcAmount = usdAmount / price;
+        buyBtc(usdAmount);
+        executed = true;
+        executedBtcSize = btcAmount;
+      }
+    } else {
+      // SELL
+      if (btcBalance <= 0) return;
+
+      const desiredBtc = tradeUsd / price;
+      const btcAmount = Math.min(desiredBtc, btcBalance);
+
+      if (btcAmount > 0) {
+        sellBtc(btcAmount);
+        executed = true;
+        executedBtcSize = btcAmount;
+      }
+    }
+
+    // If no trade executed (e.g. no balance), don't log anything
+    if (!executed) return;
+
+    // Get updated balances after the trade
+    const { usdtBalance: newUsdt, btcBalance: newBtc } = get();
+    const equityAfter = newUsdt + newBtc * price;
+
+    // profit = change in total wallet value caused by this trade
+    const profit = equityAfter - equityBefore;
+
+    addBotHistoryEntry({
+      time: Date.now(),
+      side: direction === 'buy' ? 'BUY' : 'SELL',
+      price,
+      size: executedBtcSize,
+      profit,
     });
   },
 
@@ -385,8 +492,9 @@ export const useStore = create<AppState & AppActions>((set, get) => ({
   },
 
   initializePopulation: () => {
-    const population = Array.from({ length: GA_CONFIG.POPULATION_SIZE }, (_, i) =>
-      createIndividual(randomGenotype(), i)
+    const population = Array.from(
+      { length: GA_CONFIG.POPULATION_SIZE },
+      (_, i) => createIndividual(randomGenotype(), i)
     );
     set((state) => ({
       autoTrader: { ...state.autoTrader, population, generation: 1 },
@@ -394,10 +502,13 @@ export const useStore = create<AppState & AppActions>((set, get) => ({
   },
 
   runGABotLogic: () => {
-    const { autoTrader, price, buyBtc, sellBtc } = get();
+    const { autoTrader, price, buyBtc, sellBtc, addBotHistoryEntry } = get();
     const { episodeStartTime, priceHistory, population } = autoTrader;
 
-    if (!episodeStartTime || Date.now() - episodeStartTime < GA_CONFIG.EPISODE_DURATION) {
+    if (
+      !episodeStartTime ||
+      Date.now() - episodeStartTime < GA_CONFIG.EPISODE_DURATION
+    ) {
       // Episode running → evaluate population
       const updatedPopulation = population.map((ind) => {
         const g = ind.genotype;
@@ -421,20 +532,38 @@ export const useStore = create<AppState & AppActions>((set, get) => ({
         if (ind.id === 0) {
           if (position === 'flat' && cooldownCounter === 0) {
             if (signal > g.entry_thr) {
+              // OPEN LONG
               buyBtc(GA_CONFIG.TRADE_AMOUNT_USD);
               position = 'long';
               entryPrice = price;
             }
           } else if (position === 'long') {
             const ret = (price - entryPrice) / entryPrice;
+
             if (ret >= g.take_profit || ret <= -g.stop_loss) {
+              // CLOSE LONG
               sellBtc(); // sell all
+
+              // Log completed bot trade (champion)
+              const tradeNotional = GA_CONFIG.TRADE_AMOUNT_USD;
+              const sizeInBtc = tradeNotional / entryPrice;
+              const profitUsd =
+                tradeNotional * ret - tradeNotional * GA_CONFIG.TRANSACTION_COST;
+
+              addBotHistoryEntry({
+                time: Date.now(),
+                side: 'BUY', // entry side (bot only goes long for now)
+                price: entryPrice,
+                size: sizeInBtc,
+                profit: profitUsd,
+              });
+
               position = 'flat';
               cooldownCounter = g.cooldown;
             }
           }
         } else {
-          // simulation bots (long + short)
+          // simulation bots (long + short) inside GA
           if (position === 'flat' && cooldownCounter === 0) {
             if (signal > g.entry_thr) {
               position = 'long';
@@ -474,17 +603,29 @@ export const useStore = create<AppState & AppActions>((set, get) => ({
   evolveNextGeneration: () => {
     set((state) => {
       const price = get().price;
-      const finalPopulation = state.autoTrader.population.map((ind) => {
-        let { pnl, position, entryPrice } = ind;
-        if (ind.id !== 0 && position !== 'flat') {
-          const ret =
-            position === 'long'
-              ? (price - entryPrice) / entryPrice
-              : (entryPrice - price) / entryPrice;
-          pnl += ret - GA_CONFIG.TRANSACTION_COST;
+
+      // Explicitly type this as Individual[] so TS is happy
+      const finalPopulation: Individual[] = state.autoTrader.population.map(
+        (ind): Individual => {
+          let { pnl, position, entryPrice } = ind;
+
+          if (ind.id !== 0 && position !== 'flat') {
+            const ret =
+              position === 'long'
+                ? (price - entryPrice) / entryPrice
+                : (entryPrice - price) / entryPrice;
+            pnl += ret - GA_CONFIG.TRANSACTION_COST;
+          }
+
+          return {
+            ...ind,
+            fitness: pnl,
+            pnl: 0,
+            trades: 0,
+            position: 'flat', // back to flat at start of new episode
+          };
         }
-        return { ...ind, fitness: pnl, pnl: 0, trades: 0, position: 'flat' };
-      });
+      );
 
       finalPopulation.sort((a, b) => b.fitness - a.fitness);
 
@@ -514,7 +655,9 @@ export const useStore = create<AppState & AppActions>((set, get) => ({
           parentA.entry_thr * alpha + parentB.entry_thr * (1 - alpha),
           parentA.take_profit * alpha + parentB.take_profit * (1 - alpha),
           parentA.stop_loss * alpha + parentB.stop_loss * (1 - alpha),
-          Math.round(parentA.cooldown * alpha + parentB.cooldown * (1 - alpha))
+          Math.round(
+            parentA.cooldown * alpha + parentB.cooldown * (1 - alpha)
+          )
         );
 
         if (childG.short_p >= childG.long_p) childG.long_p = childG.short_p + 1;
@@ -533,7 +676,10 @@ export const useStore = create<AppState & AppActions>((set, get) => ({
           const mutateField = (field: keyof Genotype, isInt = false) => {
             if (Math.random() < GA_CONFIG.MUTATION_PROB) {
               // @ts-ignore
-              const sigma = Math.max(Math.abs(m[field]) * GA_CONFIG.MUTATION_SCALE, 1e-6);
+              const sigma = Math.max(
+                Math.abs(m[field]) * GA_CONFIG.MUTATION_SCALE,
+                1e-6
+              );
               const gauss =
                 (Math.random() - 0.5) +
                 (Math.random() - 0.5) +
@@ -562,9 +708,7 @@ export const useStore = create<AppState & AppActions>((set, get) => ({
         };
 
         const mutatedChild = mutate(childG);
-        next_pop.push(
-          createIndividual(mutatedChild, next_pop.length)
-        );
+        next_pop.push(createIndividual(mutatedChild, next_pop.length));
       }
 
       return {

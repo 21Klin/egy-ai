@@ -11,18 +11,36 @@ import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import { Switch } from "./ui/switch";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
+import { Input } from "./ui/input";
+
+// ---------------- WALLET ----------------
 
 // ---------------- WALLET ----------------
 
 function Wallet() {
-  const { usdtBalance, btcBalance, price } = useStore((state) => ({
-    usdtBalance: state.usdtBalance,
-    btcBalance: state.btcBalance,
-    price: state.price,
-  }));
+  const { usdtBalance, btcBalance, price, position, pnl } = useStore(
+    (state) => ({
+      usdtBalance: state.usdtBalance,
+      btcBalance: state.btcBalance,
+      price: state.price,
+      position: state.position,
+      pnl: state.pnl,
+    })
+  );
 
+  // Total equity = cash + spot BTC value + unrealized PnL from leverage
   const btcValueInUsdt = btcBalance * price;
-  const totalValue = usdtBalance + btcValueInUsdt;
+  const totalValue = usdtBalance + btcValueInUsdt + (position ? pnl : 0);
+
+  // If there is a leverage position, compute its BTC size and margin
+  const marginUsed = position ? position.size ?? 0 : 0;
+  const leverageBtc =
+    position && position.entryPrice > 0
+      ? ((position.size ?? 0) /
+          position.entryPrice) *
+        (position.leverage ?? 1) *
+        (position.direction === "buy" ? 1 : -1)
+      : 0;
 
   return (
     <div className="space-y-4">
@@ -32,33 +50,90 @@ function Wallet() {
           ${totalValue.toFixed(2)}
         </span>
       </div>
+
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
-          <span className="text-muted-foreground">USDT</span>
+          <span className="text-muted-foreground">USDT (cash)</span>
           <span className="font-mono">{usdtBalance.toFixed(2)}</span>
         </div>
+
         <div className="flex justify-between">
-          <span className="text-muted-foreground">BTC</span>
+          <span className="text-muted-foreground">BTC (spot)</span>
           <span className="font-mono">{btcBalance.toFixed(6)}</span>
         </div>
+
+        {position && (
+          <>
+            <div className="flex justify-between pt-1">
+              <span className="text-muted-foreground">
+                Margin in position (leverage)
+              </span>
+              <span className="font-mono">{marginUsed.toFixed(2)} USDT</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">
+                BTC exposure (leverage)
+              </span>
+              <span className="font-mono">
+                {Math.abs(leverageBtc).toFixed(6)}{" "}
+                {leverageBtc > 0 ? "long" : leverageBtc < 0 ? "short" : ""}
+              </span>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
 }
 
+
 // ---------------- SPOT TRADING ----------------
 
 function SpotTrading() {
-  const { buyBtc, sellBtc, btcBalance } = useStore();
+  const { buyBtc, sellBtc, btcBalance, usdtBalance, price } = useStore();
+  const [amountUsd, setAmountUsd] = useState(100);
+
+  const canBuy = price > 0 && usdtBalance > 0 && amountUsd > 0;
 
   return (
-    <div>
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="spot-amount">Amount (USDT)</Label>
+        <Input
+          id="spot-amount"
+          type="number"
+          min={1}
+          step={10}
+          value={amountUsd}
+          onChange={(e) => {
+            const v = Number(e.target.value);
+            setAmountUsd(Number.isNaN(v) ? 0 : v);
+          }}
+        />
+        <p className="text-xs text-muted-foreground">
+          How many USDT worth of BTC you want to buy in one click.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 text-xs">
+        <Button variant="outline" onClick={() => setAmountUsd(25)}>
+          25 USDT
+        </Button>
+        <Button variant="outline" onClick={() => setAmountUsd(50)}>
+          50 USDT
+        </Button>
+        <Button variant="outline" onClick={() => setAmountUsd(100)}>
+          100 USDT
+        </Button>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <Button
           className="h-12 bg-success/80 text-success-foreground hover:bg-success"
-          onClick={() => buyBtc(100)}
+          disabled={!canBuy}
+          onClick={() => buyBtc(amountUsd)}
         >
-          BUY ($100)
+          BUY ({amountUsd || 0} USDT)
         </Button>
         <Button
           className="h-12 bg-destructive/80 text-destructive-foreground hover:bg-destructive"
@@ -82,13 +157,15 @@ function LeverageTrading() {
     closePosition,
     leverage,
     setLeverage,
+    positionSize,
+    setPositionSize,
   } = useStore();
 
   const leverageOptions = [1, 2, 4, 8];
 
   if (position) {
     const pnlPercentage =
-      ((pnl / position.size) * 100 * position.leverage) || 0;
+      ((pnl / (position.size || 1)) * 100 * (position.leverage || 1)) || 0;
     const isProfit = pnl >= 0;
 
     return (
@@ -168,6 +245,25 @@ function LeverageTrading() {
           ))}
         </RadioGroup>
       </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="lev-size">Position size (USDT)</Label>
+        <Input
+          id="lev-size"
+          type="number"
+          min={10}
+          step={10}
+          value={positionSize}
+          onChange={(e) => {
+            const v = Number(e.target.value);
+            setPositionSize(Number.isNaN(v) ? 0 : v);
+          }}
+        />
+        <p className="text-xs text-muted-foreground">
+          Margin used per leveraged position. Higher = bigger exposure.
+        </p>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <Button
           className="h-12 bg-success/80 text-success-foreground hover:bg-success"
@@ -256,76 +352,6 @@ function GeneticAlgorithmTrader() {
   );
 }
 
-// ---------------- PROFIT BOT ----------------
-
-function ProfitBotTrader() {
-  const [isRunning, setIsRunning] = useState(false);
-  const { simulateProfitBotTrade } = useStore();
-  const simulationIntervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleToggle = (shouldRun: boolean) => {
-    setIsRunning(shouldRun);
-  };
-
-  useEffect(() => {
-    if (isRunning) {
-      simulationIntervalRef.current = setInterval(() => {
-        simulateProfitBotTrade();
-      }, 20000); // 20 seconds
-
-      toast.success("Profit Bot Started", {
-        description: "Wallet value will increase every 20 seconds.",
-      });
-    } else {
-      if (simulationIntervalRef.current) {
-        clearInterval(simulationIntervalRef.current);
-        simulationIntervalRef.current = null;
-        toast.info("Profit Bot Stopped.");
-      }
-    }
-
-    return () => {
-      if (simulationIntervalRef.current) {
-        clearInterval(simulationIntervalRef.current);
-      }
-    };
-  }, [isRunning, simulateProfitBotTrade]);
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h3 className="text-base font-semibold">Profit Bot</h3>
-          <p
-            className={cn(
-              "text-sm",
-              isRunning ? "text-success" : "text-muted-foreground"
-            )}
-          >
-            {isRunning ? "Running" : "Stopped"}
-          </p>
-        </div>
-        <Switch
-          checked={isRunning}
-          onCheckedChange={handleToggle}
-          aria-label="Toggle Profit Bot"
-        />
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 text-sm">
-        <div className="text-muted-foreground">Status:</div>
-        <div className="text-right font-mono">
-          {isRunning ? "Adding Profit" : "Idle"}
-        </div>
-        <div className="text-muted-foreground">Next Profit:</div>
-        <div className="text-right font-mono">
-          {isRunning ? "~20s" : "N/A"}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ---------------- MAIN PANEL ----------------
 
 export default function TradePanel() {
@@ -336,11 +362,10 @@ export default function TradePanel() {
       </CardHeader>
       <CardContent className="flex min-h-0 flex-grow flex-col space-y-4 p-0">
         <Tabs defaultValue="spot" className="flex min-h-0 flex-grow flex-col">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="spot">Spot</TabsTrigger>
             <TabsTrigger value="leverage">Leverage</TabsTrigger>
             <TabsTrigger value="ga-bot">GA Bot</TabsTrigger>
-            <TabsTrigger value="profit-bot">Profit Bot</TabsTrigger>
           </TabsList>
 
           <TabsContent value="spot" className="p-4">
@@ -353,10 +378,6 @@ export default function TradePanel() {
 
           <TabsContent value="ga-bot" className="p-4">
             <GeneticAlgorithmTrader />
-          </TabsContent>
-
-          <TabsContent value="profit-bot" className="p-4">
-            <ProfitBotTrader />
           </TabsContent>
         </Tabs>
       </CardContent>
