@@ -9,11 +9,11 @@ export default function Page() {
           </p>
           <h1 className="mt-2 text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
             A low-latency Bitcoin trading bot, built by students, designed for
-            judges.
+            students.
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-slate-300 sm:text-base">
             This project is a student-built Bitcoin trading bot created for a
-            10,000€ competition. Instead of hiding everything behind a black
+            competition. Instead of hiding everything behind a black
             box, we focused on clear structure: live data, rule-based strategy,
             transparent UI, and a full trade history.
           </p>
@@ -28,8 +28,7 @@ export default function Page() {
             </h2>
             <p className="text-sm text-slate-300">
               Under the hood, the system is split into layers. Each part has a
-              clear job so it&apos;s easy to understand, test and explain during
-              the competition.
+              clear job so it&apos;s easy to understand, test and explain.
             </p>
 
             <ol className="space-y-4 text-sm text-slate-200">
@@ -42,7 +41,7 @@ export default function Page() {
                     Data layer – live BTC/USDT
                   </div>
                   <p className="text-xs text-slate-300">
-                    We subscribe to Binance BTC/USDT streams and normalize the
+                    We use Binance BTC/USDT streams and convert the
                     data into candles, order book depth and recent trade ticks.
                     This keeps the latency low and the structure clean.
                   </p>
@@ -57,9 +56,9 @@ export default function Page() {
                     Strategy layer – simple, explainable rules
                   </div>
                   <p className="text-xs text-slate-300">
-                    On top of that state, the bot checks technical conditions:
+                    The bot checks technical conditions:
                     trend (EMAs), structure (breakouts / pullbacks) and basic
-                    volatility filters. When rules are met, it opens or closes
+                    volatility filters. When conditions are met, it opens or closes
                     simulated positions.
                   </p>
                 </div>
@@ -73,9 +72,9 @@ export default function Page() {
                     Presentation layer – dashboard + history
                   </div>
                   <p className="text-xs text-slate-300">
-                    The trading dashboard shows live chart, order book and
-                    positions. Every simulated trade is recorded and surfaced on
-                    the Bot History page so judges can inspect each decision.
+                    The trading dashboard shows live charts, the order book and
+                    positions. Every simulated trade is recorded and shown on
+                    the Bot History page so traders can inspect each decision.
                   </p>
                 </div>
               </li>
@@ -95,7 +94,7 @@ export default function Page() {
                 way.
               </p>
               <p className="mt-2 text-xs text-slate-300">
-                Everything the bot does can be audited: entries, exits and P/L
+                Everything the bot does can be audited and studied for use in trading strategies: entries, exits and P/L
                 all appear in the history, and the live dashboard visualizes how
                 the engine behaves in real time.
               </p>
@@ -106,14 +105,14 @@ export default function Page() {
                 About our team
               </h2>
               <p className="mt-2 text-xs text-slate-300">
-                We are a small group of students. Each member took ownership of
-                a different area: live data and latency, strategy logic,
-                front-end UI/UX, and documentation.
+                We’re three young engineers building proprietary trading software from scratch.
+Our skill sets cover everything a modern automated trading system needs:
+real-time market feeds, execution logic, quantitative strategy, UX engineering, and system architecture.
               </p>
               <p className="mt-2 text-xs text-slate-300">
-                This project is more than a school assignment for us. It&apos;s
-                a chance to prove ourselves, support our families and show that
-                with limited resources we can still build something serious.
+                This isn’t a class project — it’s a proving ground.
+We’re here to show that talent, consistency, and curiosity can outperform budget and convention.
+No shortcuts. No templates. Just real work and results.
               </p>
             </div>
           </div>

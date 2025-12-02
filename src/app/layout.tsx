@@ -56,7 +56,7 @@ export default function RootLayout({
                  className="h-10 w-10 object-contain"/>                
               <div className="leading-tight">
                 <div className="text-sm font-semibold tracking-tight">
-                  Bitcoin Trading Bot
+                  Egy-Ai
                 </div>
                 <div className="text-[11px] text-slate-400">
                   Low-latency BTC/USDT simulator

@@ -15,8 +15,6 @@ import { Input } from "./ui/input";
 
 // ---------------- WALLET ----------------
 
-// ---------------- WALLET ----------------
-
 function Wallet() {
   const { usdtBalance, btcBalance, price, position, pnl } = useStore(
     (state) => ({
@@ -28,16 +26,13 @@ function Wallet() {
     })
   );
 
-  // Total equity = cash + spot BTC value + unrealized PnL from leverage
   const btcValueInUsdt = btcBalance * price;
   const totalValue = usdtBalance + btcValueInUsdt + (position ? pnl : 0);
 
-  // If there is a leverage position, compute its BTC size and margin
   const marginUsed = position ? position.size ?? 0 : 0;
   const leverageBtc =
     position && position.entryPrice > 0
-      ? ((position.size ?? 0) /
-          position.entryPrice) *
+      ? ((position.size ?? 0) / position.entryPrice) *
         (position.leverage ?? 1) *
         (position.direction === "buy" ? 1 : -1)
       : 0;
@@ -85,7 +80,6 @@ function Wallet() {
     </div>
   );
 }
-
 
 // ---------------- SPOT TRADING ----------------
 
@@ -269,13 +263,13 @@ function LeverageTrading() {
           className="h-12 bg-success/80 text-success-foreground hover:bg-success"
           onClick={() => enterPosition("buy")}
         >
-          BUY
+          Long
         </Button>
         <Button
           className="h-12 bg-destructive/80 text-destructive-foreground hover:bg-destructive"
           onClick={() => enterPosition("sell")}
         >
-          SELL
+          Short
         </Button>
       </div>
     </div>
@@ -360,8 +354,8 @@ export default function TradePanel() {
       <CardHeader className="flex-shrink-0 border-b p-4">
         <Wallet />
       </CardHeader>
-      <CardContent className="flex min-h-0 flex-grow flex-col space-y-4 p-0">
-        <Tabs defaultValue="spot" className="flex min-h-0 flex-grow flex-col">
+      <CardContent className="flex min-h-0 flex-col space-y-4 p-0">
+        <Tabs defaultValue="spot" className="flex min-h-0 flex-col">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="spot">Spot</TabsTrigger>
             <TabsTrigger value="leverage">Leverage</TabsTrigger>

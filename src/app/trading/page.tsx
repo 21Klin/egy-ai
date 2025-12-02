@@ -8,6 +8,7 @@ import OrderBook from "@/components/order-book";
 import { KraferSimLogo } from "@/components/icons";
 import SparklineChart from "@/components/sparkline-chart";
 import RecentTrades from "@/components/recent-trades";
+import MiniTradingViewWidget from "@/components/MiniTradingViewWidget";
 
 function Header() {
   return (
@@ -26,6 +27,7 @@ export default function TradingPage() {
       <div className="flex h-screen w-full flex-col bg-background text-foreground">
         <Header />
         <main className="grid flex-1 grid-cols-1 gap-4 overflow-auto p-4 lg:grid-cols-[1fr_450px]">
+          {/* LEFT SIDE: sparkline, big chart, recent trades */}
           <div className="flex flex-col gap-4">
             <Card>
               <CardContent className="p-4">
@@ -49,8 +51,13 @@ export default function TradingPage() {
             </div>
           </div>
 
-          <div className="grid grid-rows-[auto_1fr] gap-4">
-            <Card>
+          {/* RIGHT SIDE: Trade panel → Order book → Mini chart */}
+          <div className="flex flex-col gap-2">
+            {/* 1️⃣ Trade panel (already a Card inside) */}
+            <TradePanel />
+
+            {/* 2️⃣ Order book */}
+            <Card className="w-full">
               <CardHeader>
                 <CardTitle className="text-base">Order Book</CardTitle>
               </CardHeader>
@@ -58,7 +65,17 @@ export default function TradingPage() {
                 <OrderBook />
               </CardContent>
             </Card>
-            <TradePanel />
+
+            {/* 3️⃣ Mini RSI chart */}
+            <Card className="w-full">
+              <CardHeader>
+                <CardTitle className="text-base">Momentum (RSI)</CardTitle>
+              </CardHeader>
+              {/* ⬇️ FORCE HEIGHT HERE */}
+              <CardContent className="p-0" style={{ height: 400 }}>
+                <MiniTradingViewWidget />
+              </CardContent>
+            </Card>
           </div>
         </main>
       </div>

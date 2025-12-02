@@ -16,22 +16,18 @@ function OrderBookRow({
 }) {
   const [price, quantity, cumulative] = order;
 
-  const bgWidth = useMemo(
-    () => (Number(cumulative) / maxCumulative) * 100,
-    [cumulative, maxCumulative]
-  );
+  const bgWidth =
+    maxCumulative > 0 ? (Number(cumulative) / maxCumulative) * 100 : 0;
 
   return (
-    <div className="relative grid grid-cols-2 text-xs font-mono h-5 items-center px-2">
+    <div className="relative grid h-5 grid-cols-2 items-center px-2 text-xs font-mono">
       <div
         className={cn(
           'absolute top-0 bottom-0 h-full',
-          type === 'bid'
-            ? 'bg-success/20 right-0'
-            : 'bg-destructive/20 right-0'
+          type === 'bid' ? 'right-0 bg-success/20' : 'right-0 bg-destructive/20'
         )}
         style={{ width: `${bgWidth}%` }}
-      ></div>
+      />
       <span
         className={cn(
           'z-10 text-left',
@@ -40,7 +36,9 @@ function OrderBookRow({
       >
         {parseFloat(price).toFixed(2)}
       </span>
-      <span className="z-10 text-right">{parseFloat(quantity).toFixed(4)}</span>
+      <span className="z-10 text-right">
+        {parseFloat(quantity).toFixed(4)}
+      </span>
     </div>
   );
 }
@@ -51,23 +49,28 @@ export default function OrderBook() {
     price: state.price,
     priceChange: state.priceChange,
   }));
+
   const numRows = 4;
 
-  const { processedBids, processedAsks, maxCumulative } = useMemo(() => {
+  const { processedBids, processedAsks, maxCumulative } = useMemo<{
+    processedBids: Order[];
+    processedAsks: Order[];
+    maxCumulative: number;
+  }>(() => {
     let cumulativeBids = 0;
-    const bidsWithCumulative = depthData.bids
+    const bidsWithCumulative: Order[] = depthData.bids
       .slice(0, numRows)
       .map(([price, quantity]) => {
         cumulativeBids += Number(quantity);
-        return [price, quantity, cumulativeBids.toString()];
+        return [price, quantity, cumulativeBids.toString()] as Order;
       });
 
     let cumulativeAsks = 0;
-    const asksWithCumulative = depthData.asks
+    const asksWithCumulative: Order[] = depthData.asks
       .slice(0, numRows)
       .map(([price, quantity]) => {
         cumulativeAsks += Number(quantity);
-        return [price, quantity, cumulativeAsks.toString()];
+        return [price, quantity, cumulativeAsks.toString()] as Order;
       })
       .reverse();
 
@@ -96,6 +99,7 @@ export default function OrderBook() {
         <span>Price (USDT)</span>
         <span className="text-right">Amount (BTC)</span>
       </div>
+
       <div className="flex-1 space-y-px overflow-hidden">
         {processedAsks.map((order, i) => (
           <OrderBookRow
@@ -106,9 +110,10 @@ export default function OrderBook() {
           />
         ))}
       </div>
+
       <div
         className={cn(
-          'flex items-center gap-2 border-y py-2 px-2 my-1 font-sans text-lg font-bold',
+          'my-1 flex items-center gap-2 border-y px-2 py-2 font-sans text-lg font-bold',
           priceChange === 'up' && 'text-success',
           priceChange === 'down' && 'text-destructive'
         )}
@@ -117,6 +122,7 @@ export default function OrderBook() {
         {priceChange === 'up' && '↑'}
         {priceChange === 'down' && '↓'}
       </div>
+
       <div className="flex-1 space-y-px overflow-hidden">
         {processedBids.map((order, i) => (
           <OrderBookRow

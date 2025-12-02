@@ -134,8 +134,8 @@ export default function Page() {
 
           <p className="max-w-xl text-sm text-slate-300 sm:text-base">
             Our bot reads live market data, detects emerging patterns and
-            executes simulated trades with strict risk rules. Everything is
-            visible for judges – from the trading screen to the final trade
+            utilizes a genetic algorithm to execute simulated trades with strict risk rules. Everything is
+            clear and concise – from the trading screen to the final trade
             history.
           </p>
 
@@ -147,7 +147,7 @@ export default function Page() {
               tone="emerald"
             />
             <StatusPill label="Data feed" value="BTC/USDT" tone="cyan" />
-            <StatusPill label="Risk mode" value="SIMULATION" tone="amber" />
+            <StatusPill label="" value="SIMULATION" tone="amber" />
           </div>
 
           {/* BUTTONS */}
@@ -300,7 +300,7 @@ export default function Page() {
         <div className="relative mx-auto grid max-w-6xl gap-6 px-4 py-10 md:grid-cols-3">
           <FeatureCard
             title="Live market data"
-            body="We subscribe to BTC/USDT streams and compress order book, price and recent trades into a clean internal state for the strategy."
+            body="We use to BTC/USDT streams and compress order book, price and recent trades into a clean readable interface for testing trading strategy."
           />
           <FeatureCard
             title="Rule-based strategy"
@@ -322,20 +322,20 @@ export default function Page() {
             </h2>
             <p className="mt-2 text-sm text-slate-300">
               The whole site is structured to match how a trading engine
-              actually works. Judges can follow the flow from the live trading
-              screen, into the strategy logic, and down into the final trade
-              log.
+              actually works. Investors/traders can follow the flow from the live trading
+              screen, to the strategy logic, and down to the final trade.
+            
             </p>
             <ol className="mt-6 space-y-3 text-sm text-slate-200">
               <Step
                 index={1}
                 title="Data layer"
-                body="The data-provider (in the full version) listens to WebSocket streams and normalizes BTC/USDT into candles, order book snapshots and tick data."
+                body="The data-provider (in the full version) listens to WebSocket streams and converts BTC/USDT into candles, order book snapshots and tick data."
               />
               <Step
                 index={2}
                 title="Strategy layer"
-                body="The bot runs rules on top of that state, checking trend, volatility and structure to decide when to open or close positions."
+                body="The bot checks trends, volatility and current market structures to decide when to open or close positions."
               />
               <Step
                 index={3}
@@ -347,7 +347,7 @@ export default function Page() {
 
           <div className="rounded-3xl border border-slate-800 bg-slate-950/80 p-4 text-xs text-slate-300 shadow-[0_18px_45px_rgba(15,23,42,0.9)]">
             <p className="text-[11px] uppercase tracking-wide text-slate-400">
-              For judges
+              For Those Who Want To Learn 
             </p>
             <p className="mt-2">
               This UI is not just for looks. It&apos;s designed so you can:
@@ -389,18 +389,23 @@ export default function Page() {
           <div className="mt-6 grid gap-4 md:grid-cols-3">
             <TeamCard
               initial="E"
-              role="Frontend & UX"
-              body="Hero layout, navigation, overall design and user experience for the dashboard and history views."
+              role="HFT Interface & UX Systems Engineering"
+              body="Architect of the trading experience. Designs ultra-low latency dashboards, data-dense UI components, intuitive user flow logic, and visual optimization for real-time market execution.
+Contributed to algorithmic trading logic through execution routing and UI-level signal integration, ensuring strategy decisions reliably translate into real-time actionable orders."
+  title="Co-Founder & Chief UX/UI Systems Officer — EGY AI"
             />
+              
             <TeamCard
               initial="G"
-              role="Strategy & Logic"
-              body="Trading rules, order execution logic and how positions are opened, managed and closed."
+              role="Quant Strategy & Market Intelligence"
+              body="Architects high-conviction trading frameworks, multi-factor entry/exit criteria, volatility models, and capital exposure rules. Designs rule-based risk systems, liquidation protection, and institutional-grade strategy logic inspired by hedge-fund order flow, macroeconomic structure, and real-world market data."
+              title="Co-Founder & Chief Economic Strategy Officer — EGY AI"
             />
             <TeamCard
               initial="Y"
-              role="Data & Analysis"
-              body="Market data handling, parameters, testing ideas and interpreting performance of the strategy."
+              role="Algorithmic Systems & Trading Infrastructure"
+              body="Develops automated execution logic, Python-based trading engines, and market data processing pipelines. Designs signal routing, state management, and bot decision systems that bridge real-time price feeds with capital allocation frameworks for consistent, scalable performance."
+              title="Co-Founder & Chief Algorithmic Systems Officer — EGY AI"
             />
           </div>
         </div>
@@ -578,10 +583,12 @@ function TeamCard({
   initial,
   role,
   body,
+  title,
 }: {
   initial: string;
   role: string;
   body: string;
+  title: string;
 }) {
   return (
     <div className="rounded-2xl border border-slate-800 bg-slate-950/80 p-4 shadow-[0_18px_45px_rgba(15,23,42,0.9)]">
@@ -591,7 +598,8 @@ function TeamCard({
         </div>
         <div>
           <div className="text-xs font-semibold text-slate-50">{role}</div>
-          <div className="text-[11px] text-slate-400">EGY core member</div>
+          <div className="text-[11px] text-slate-400">{title}</div>
+          
         </div>
       </div>
       <p className="text-xs text-slate-300">{body}</p>
