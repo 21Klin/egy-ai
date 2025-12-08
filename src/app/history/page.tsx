@@ -21,9 +21,14 @@ export default function Page() {
             .
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-slate-300 sm:text-base">
-            This table shows the trades made by the GA bot: when the trade
-            happened, whether it was a BUY or SELL, at what price, and the
-            approximate position size in BTC.
+            This table shows the trades made by the <span
+  className="bg-gradient-to-r from-emerald-300 via-cyan-300 to-purple-400 
+             bg-clip-text text-transparent font-semibold"
+>
+  Genetic Algorithm Bot
+</span>
+
+        : when the trade happened, whether it was a BUY or SELL, at what price, and the approximate position size in BTC.”
           </p>
         </section>
 

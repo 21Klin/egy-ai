@@ -38,23 +38,31 @@ function Wallet() {
       : 0;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5 pt-1">
+
       <div className="flex items-baseline justify-between">
         <span className="text-muted-foreground">Total Value</span>
-        <span className="font-mono text-lg font-bold">
-          ${totalValue.toFixed(2)}
-        </span>
+        <span className="font-mono text-xl font-bold text-emerald-300 drop-shadow-[0_0_6px_rgba(16,185,129,0.35)]">
+  ${totalValue.toFixed(2)}
+</span>
+
       </div>
 
-      <div className="space-y-2 text-sm">
+      <div className="space-y-2 text-sm divide-y divide-slate-800/60 pt-1">
+<div className="pt-2"></div>
+
         <div className="flex justify-between">
           <span className="text-muted-foreground">USDT (cash)</span>
-          <span className="font-mono">{usdtBalance.toFixed(2)}</span>
+         <span className="font-mono text-emerald-400">
+    {usdtBalance.toFixed(2)}
+</span>
         </div>
 
         <div className="flex justify-between">
           <span className="text-muted-foreground">BTC (spot)</span>
-          <span className="font-mono">{btcBalance.toFixed(6)}</span>
+          <span className="font-mono text-orange-400">
+    {btcBalance.toFixed(6)}
+  </span>
         </div>
 
         {position && (
@@ -69,7 +77,7 @@ function Wallet() {
               <span className="text-muted-foreground">
                 BTC exposure (leverage)
               </span>
-              <span className="font-mono">
+              <span className="font-mono text-orange-400 font-semibold drop-shadow-[0_0_4px_rgba(251,146,60,0.4)]">
                 {Math.abs(leverageBtc).toFixed(6)}{" "}
                 {leverageBtc > 0 ? "long" : leverageBtc < 0 ? "short" : ""}
               </span>
@@ -110,32 +118,54 @@ function SpotTrading() {
       </div>
 
       <div className="grid grid-cols-3 gap-2 text-xs">
-        <Button variant="outline" onClick={() => setAmountUsd(25)}>
-          25 USDT
-        </Button>
-        <Button variant="outline" onClick={() => setAmountUsd(50)}>
-          50 USDT
-        </Button>
-        <Button variant="outline" onClick={() => setAmountUsd(100)}>
-          100 USDT
-        </Button>
-      </div>
+  {[25, 50, 100].map((v) => (
+    <Button
+      key={v}
+      variant="outline"
+      onClick={() => setAmountUsd(v)}
+      className="border-slate-700 bg-slate-900/40 hover:bg-slate-900/70 text-slate-200 hover:text-white transition-all"
+    >
+      {v} USDT
+    </Button>
+  ))}
+</div>
+
 
       <div className="grid grid-cols-2 gap-4">
         <Button
-          className="h-12 bg-success/80 text-success-foreground hover:bg-success"
-          disabled={!canBuy}
-          onClick={() => buyBtc(amountUsd)}
-        >
-          BUY ({amountUsd || 0} USDT)
-        </Button>
+  className="
+    h-12 
+    bg-emerald-500/20 
+    text-emerald-300 
+    border border-emerald-500/40
+    hover:bg-emerald-500/30 
+    hover:border-emerald-400 
+    transition-all
+    shadow-[0_0_12px_rgba(16,185,129,0.25)]
+  "
+  disabled={!canBuy}
+  onClick={() => buyBtc(amountUsd)}
+>
+  BUY ({amountUsd || 0} USDT)
+</Button>
+
         <Button
-          className="h-12 bg-destructive/80 text-destructive-foreground hover:bg-destructive"
-          onClick={() => sellBtc(btcBalance)}
-          disabled={btcBalance <= 0}
-        >
-          SELL (ALL)
-        </Button>
+  className="
+    h-12 
+    bg-red-500/20 
+    text-red-300 
+    border border-red-500/40
+    hover:bg-red-500/30 
+    hover:border-red-400 
+    transition-all
+    shadow-[0_0_12px_rgba(239,68,68,0.25)]
+  "
+  onClick={() => sellBtc(btcBalance)}
+  disabled={btcBalance <= 0}
+>
+  SELL (ALL)
+</Button>
+
       </div>
     </div>
   );
@@ -163,8 +193,9 @@ function LeverageTrading() {
     const isProfit = pnl >= 0;
 
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-4 text-center">
+      <div className="space-y-5 pt-1">
+        <div className="grid grid-cols-3 gap-4 text-center bg-slate-900/40 p-3 rounded-xl border border-slate-800">
+
           <div>
             <div className="text-sm text-muted-foreground">Direction</div>
             <div
@@ -192,11 +223,13 @@ function LeverageTrading() {
           </div>
         </div>
 
-        <div className="space-y-1 text-center">
+        <div className="space-y-2 text-center bg-slate-900/40 p-3 rounded-xl border border-slate-800">
+
           <div className="text-sm text-muted-foreground">Live P/L</div>
           <div
             className={cn(
-              "font-mono text-2xl font-bold",
+              "font-mono text-3xl font-bold tracking-tight drop-shadow",
+
               isProfit ? "text-success" : "text-destructive"
             )}
           >
@@ -210,25 +243,36 @@ function LeverageTrading() {
         </div>
 
         <Button
-          variant="secondary"
-          className="w-full"
-          onClick={closePosition}
-        >
-          Close Position
-        </Button>
+  className="
+    w-full h-11 
+    bg-red-500/20 
+    text-red-300 
+    border border-red-500/40
+    hover:bg-red-500/30 
+    hover:border-red-400 
+    transition-all
+    shadow-[0_0_12px_rgba(239,68,68,0.25)]
+  "
+  onClick={closePosition}
+>
+  Close Position
+</Button>
+
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pt-1">
+
       <div className="space-y-2">
         <Label>Leverage</Label>
         <RadioGroup
-          value={leverage.toString()}
-          onValueChange={(value) => setLeverage(Number(value))}
-          className="flex gap-4"
-        >
+  value={leverage.toString()}
+  onValueChange={(value) => setLeverage(Number(value))}
+  className="flex gap-4 bg-slate-900/40 border border-slate-800 p-3 rounded-xl"
+>
+
           {leverageOptions.map((option) => (
             <div key={option} className="flex items-center space-x-2">
               <RadioGroupItem value={option.toString()} id={`r${option}`} />
@@ -258,19 +302,40 @@ function LeverageTrading() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4 mt-2">
+
         <Button
-          className="h-12 bg-success/80 text-success-foreground hover:bg-success"
-          onClick={() => enterPosition("buy")}
-        >
-          Long
-        </Button>
+  className="
+    h-12 
+    bg-emerald-500/20 
+    text-emerald-300 
+    border border-emerald-500/40
+    hover:bg-emerald-500/30 
+    hover:border-emerald-400 
+    transition-all
+    shadow-[0_0_12px_rgba(16,185,129,0.25)]
+  "
+  onClick={() => enterPosition("buy")}
+>
+  Long
+</Button>
+
         <Button
-          className="h-12 bg-destructive/80 text-destructive-foreground hover:bg-destructive"
-          onClick={() => enterPosition("sell")}
-        >
-          Short
-        </Button>
+  className="
+    h-12 
+    bg-red-500/20 
+    text-red-300 
+    border border-red-500/40
+    hover:bg-red-500/30 
+    hover:border-red-400 
+    transition-all
+    shadow-[0_0_12px_rgba(239,68,68,0.25)]
+  "
+  onClick={() => enterPosition("sell")}
+>
+  Short
+</Button>
+
       </div>
     </div>
   );
@@ -312,36 +377,53 @@ function GeneticAlgorithmTrader() {
   }, [isRunning, simulateGABotTrade]);
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h3 className="text-base font-semibold">GA Bot Simulator</h3>
-          <p
-            className={cn(
-              "text-sm",
-              isRunning ? "text-success" : "text-muted-foreground"
-            )}
-          >
-            {isRunning ? "Running" : "Stopped"}
-          </p>
-        </div>
-        <Switch
-          checked={isRunning}
-          onCheckedChange={handleToggle}
-          aria-label="Toggle GA Bot Simulator"
-        />
-      </div>
+  <div className="relative space-y-5 bg-slate-900/40 border border-slate-800 p-4 rounded-xl">
+    {/* OPTIONAL GLOW */}
+    <div className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-br from-emerald-500/5 to-purple-500/5 blur-xl" />
 
-      <div className="grid grid-cols-2 gap-4 text-sm">
-        <div className="text-muted-foreground">Status:</div>
-        <div className="text-right font-mono">
-          {isRunning ? "Simulating Trades" : "Idle"}
-        </div>
-        <div className="text-muted-foreground">Next Change:</div>
-        <div className="text-right font-mono">
-          {isRunning ? "~20s" : "N/A"}
-        </div>
-      </div>
+
+    
+     <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+  <div className="space-y-1">
+    <h3 className="text-base font-semibold tracking-tight text-slate-100">
+      Genetic Algorithm Bot
+    </h3>
+    <p
+      className={cn(
+        "text-xs font-mono",
+        isRunning ? "text-emerald-300" : "text-slate-500"
+      )}
+    >
+      {isRunning ? "● ACTIVE" : "● IDLE"}
+    </p>
+  </div>
+
+  <Switch
+    checked={isRunning}
+    onCheckedChange={handleToggle}
+    aria-label="Toggle GA Bot Simulator"
+  />
+</div>
+
+
+      
+        <div className="grid grid-cols-2 gap-3 text-sm bg-slate-900/30 p-3 rounded-lg border border-slate-800">
+  <div className="text-slate-400">Status</div>
+  <div
+    className={cn(
+      "text-right font-mono",
+      isRunning ? "text-emerald-300" : "text-slate-500"
+    )}
+  >
+    {isRunning ? "Trading" : "Idle"}
+  </div>
+
+  <div className="text-slate-400">Next Tick</div>
+  <div className="text-right font-mono">
+    {isRunning ? "~20s" : "—"}
+  </div>
+</div>
+
     </div>
   );
 }
@@ -351,7 +433,7 @@ function GeneticAlgorithmTrader() {
 export default function TradePanel() {
   return (
     <Card className="flex flex-col">
-      <CardHeader className="flex-shrink-0 border-b p-4">
+      <CardHeader className="flex-shrink-0 border-b p-4 bg-slate-950/60 backdrop-blur-sm shadow-[0_0_20px_rgba(16,185,129,0.05)]">
         <Wallet />
       </CardHeader>
       <CardContent className="flex min-h-0 flex-col space-y-4 p-0">

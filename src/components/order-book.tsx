@@ -5,6 +5,8 @@ import { useStore, type Order } from '@/lib/store';
 import { cn } from '@/lib/utils';
 import { Skeleton } from './ui/skeleton';
 
+// ---------------- ROW ----------------
+
 function OrderBookRow({
   order,
   type,
@@ -20,28 +22,37 @@ function OrderBookRow({
     maxCumulative > 0 ? (Number(cumulative) / maxCumulative) * 100 : 0;
 
   return (
-    <div className="relative grid h-5 grid-cols-2 items-center px-2 text-xs font-mono">
+    <div className="relative grid h-6 grid-cols-2 items-center px-2 text-xs font-mono">
+      {/* cumulative shading */}
       <div
         className={cn(
-          'absolute top-0 bottom-0 h-full',
-          type === 'bid' ? 'right-0 bg-success/20' : 'right-0 bg-destructive/20'
+          'absolute top-0 bottom-0 h-full rounded-l-md transition-all duration-200',
+          type === 'bid'
+            ? 'right-0 bg-emerald-500/10'
+            : 'right-0 bg-red-500/10'
         )}
         style={{ width: `${bgWidth}%` }}
       />
+
+      {/* PRICE */}
       <span
         className={cn(
-          'z-10 text-left',
-          type === 'ask' ? 'text-destructive' : 'text-success'
+          'z-10 text-left drop-shadow-sm',
+          type === 'ask' ? 'text-red-300' : 'text-emerald-300'
         )}
       >
         {parseFloat(price).toFixed(2)}
       </span>
-      <span className="z-10 text-right">
+
+      {/* QUANTITY */}
+      <span className="z-10 text-right text-slate-200 drop-shadow-sm">
         {parseFloat(quantity).toFixed(4)}
       </span>
     </div>
   );
 }
+
+// ---------------- MAIN COMPONENT ----------------
 
 export default function OrderBook() {
   const { depthData, price, priceChange } = useStore((state) => ({
@@ -50,39 +61,29 @@ export default function OrderBook() {
     priceChange: state.priceChange,
   }));
 
-  const numRows = 4;
+  const numRows = 5;
 
-  const { processedBids, processedAsks, maxCumulative } = useMemo<{
-    processedBids: Order[];
-    processedAsks: Order[];
-    maxCumulative: number;
-  }>(() => {
+  const { processedBids, processedAsks, maxCumulative } = useMemo(() => {
     let cumulativeBids = 0;
-    const bidsWithCumulative: Order[] = depthData.bids
-      .slice(0, numRows)
-      .map(([price, quantity]) => {
-        cumulativeBids += Number(quantity);
-        return [price, quantity, cumulativeBids.toString()] as Order;
-      });
+    const bids: Order[] = depthData.bids.slice(0, numRows).map(([p, q]) => {
+      cumulativeBids += Number(q);
+      return [p, q, cumulativeBids.toString()] as Order;
+    });
 
     let cumulativeAsks = 0;
-    const asksWithCumulative: Order[] = depthData.asks
-      .slice(0, numRows)
-      .map(([price, quantity]) => {
-        cumulativeAsks += Number(quantity);
-        return [price, quantity, cumulativeAsks.toString()] as Order;
-      })
-      .reverse();
-
-    const max = Math.max(cumulativeBids, cumulativeAsks);
+    const asks: Order[] = depthData.asks.slice(0, numRows).map(([p, q]) => {
+      cumulativeAsks += Number(q);
+      return [p, q, cumulativeAsks.toString()] as Order;
+    });
 
     return {
-      processedBids: bidsWithCumulative,
-      processedAsks: asksWithCumulative,
-      maxCumulative: max,
+      processedBids: bids,
+      processedAsks: asks.reverse(),
+      maxCumulative: Math.max(cumulativeBids, cumulativeAsks),
     };
   }, [depthData]);
 
+  // skeleton while loading
   if (processedAsks.length === 0 || processedBids.length === 0) {
     return (
       <div className="space-y-2 p-2">
@@ -95,39 +96,43 @@ export default function OrderBook() {
 
   return (
     <div className="flex h-full flex-col font-mono text-xs">
-      <div className="grid grid-cols-2 px-2 py-1 text-muted-foreground">
+      {/* HEADER */}
+      <div className="grid grid-cols-2 px-2 py-1 text-[10px] text-muted-foreground uppercase tracking-wide">
         <span>Price (USDT)</span>
         <span className="text-right">Amount (BTC)</span>
       </div>
 
+      {/* ASKS */}
       <div className="flex-1 space-y-px overflow-hidden">
-        {processedAsks.map((order, i) => (
+        {processedAsks.map((o, i) => (
           <OrderBookRow
             key={`ask-${i}`}
-            order={order}
+            order={o}
             type="ask"
             maxCumulative={maxCumulative}
           />
         ))}
       </div>
 
+      {/* MID PRICE */}
       <div
         className={cn(
-          'my-1 flex items-center gap-2 border-y px-2 py-2 font-sans text-lg font-bold',
-          priceChange === 'up' && 'text-success',
-          priceChange === 'down' && 'text-destructive'
+          'my-1 flex items-center justify-center gap-2 border-y border-slate-800 bg-slate-900/60 px-2 py-2 font-sans text-lg font-bold shadow-inner',
+          priceChange === 'up' && 'text-emerald-400',
+          priceChange === 'down' && 'text-red-400'
         )}
       >
-        <span>{price.toFixed(2)}</span>
-        {priceChange === 'up' && '↑'}
-        {priceChange === 'down' && '↓'}
+        {price.toFixed(2)}
+        {priceChange === 'up' && <span className="text-emerald-400">↑</span>}
+        {priceChange === 'down' && <span className="text-red-400">↓</span>}
       </div>
 
+      {/* BIDS */}
       <div className="flex-1 space-y-px overflow-hidden">
-        {processedBids.map((order, i) => (
+        {processedBids.map((o, i) => (
           <OrderBookRow
             key={`bid-${i}`}
-            order={order}
+            order={o}
             type="bid"
             maxCumulative={maxCumulative}
           />

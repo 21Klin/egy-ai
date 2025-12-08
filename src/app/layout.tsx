@@ -2,6 +2,14 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Link from "next/link";
+import DataProvider from "@/lib/DataProvider";
+
+
+
+
+
+
+
 
 export const metadata: Metadata = {
   title: "Low-Latency Trading Agent",
@@ -12,8 +20,10 @@ const navItems = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
   { href: "/history", label: "Bot History" },
-  { href: "/trading", label: "Trading" },
+  { href: "/guide", label: "Guide" }, // ← NEW
+  { href: "/contact", label: "Contact Us" }, // ← NEW
 ];
+
 
 export default function RootLayout({
   children,
@@ -134,7 +144,12 @@ export default function RootLayout({
         </header>
 
                 {/* Page content pushed down under header */}
-        <main className="pt-20">{children}</main>
+        <DataProvider>
+  <main className="pt-20">
+    {children}
+  </main>
+</DataProvider>
+<Toaster />
 
         {/* Footer */}
         <footer className="border-t border-slate-800 bg-slate-950/95">

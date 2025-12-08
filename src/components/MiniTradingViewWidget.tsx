@@ -10,28 +10,58 @@ function MiniTradingViewWidget() {
     if (!container.current || isWidgetCreated.current) return;
 
     const checkTradingView = () => {
-      if (typeof window !== 'undefined' && (window as any).TradingView) {
-        new (window as any).TradingView.widget({
+      const TV = (window as any).TradingView;
+
+      if (TV && TV.widget) {
+        new TV.widget({
           autosize: true,
           symbol: 'BINANCE:BTCUSDT',
           interval: '1',
           timezone: 'Etc/UTC',
           theme: 'dark',
-          style: '1',
+          style: '3', // minimal style (cleaner for RSI-only)
           locale: 'en',
-          enable_publishing: false,
-          withdateranges: false,
           hide_side_toolbar: true,
           hide_top_toolbar: true,
+          hide_legend: true,
           allow_symbol_change: false,
-          container_id: 'tradingview_chart_container_mini',
-          // Always show RSI
-          studies: ['RSI@tv-basicstudies'],
+          withdateranges: false,
+          container_id: 'tradingview_rsi_only_widget',
+
+          // ⭐ FORCE ONLY RSI TO SHOW (auto max)
+          studies: [
+            {
+              id: 'RSI@tv-basicstudies',
+              inputs: {
+                length: 14,
+              },
+              // Make RSI fill the entire panel
+              styles: {
+                "plot.color": "#10b981",  // emerald RSI line
+                "plot.linewidth": 2
+              },
+            },
+          ],
+
+          // ⭐ Remove prices, volumes, everything except RSI panel
+          disabled_features: [
+            'header_compare',
+            'header_symbol_search',
+            'header_saveload',
+            'footer_logo',
+            'volume_force_overlay',
+            'display_market_status',
+            'symbol_info',
+            'timeframes_toolbar',
+            'legend_widget',
+            'edit_buttons_in_legend',
+            'left_toolbar',
+          ],
         });
 
         isWidgetCreated.current = true;
       } else {
-        setTimeout(checkTradingView, 100);
+        setTimeout(checkTradingView, 150);
       }
     };
 
@@ -39,15 +69,14 @@ function MiniTradingViewWidget() {
   }, []);
 
   return (
-    // Parent fills whatever height CardContent gives it
     <div style={{ height: '100%', width: '100%' }}>
       <div
         ref={container}
-        id="tradingview_chart_container_mini"
+        id="tradingview_rsi_only_widget"
         style={{ height: '100%', width: '100%' }}
       >
         <div className="flex h-full items-center justify-center text-xs text-muted-foreground">
-          Loading mini chart...
+          Loading RSI…
         </div>
       </div>
     </div>

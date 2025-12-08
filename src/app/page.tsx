@@ -3,6 +3,8 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useStore } from "@/lib/store";
+
 
 type BootStep = 0 | 1 | 2 | 3;
 
@@ -10,6 +12,15 @@ export default function Page() {
   const [bootDone, setBootDone] = useState(false);
   const [bootStep, setBootStep] = useState<BootStep>(0);
   const [parallax, setParallax] = useState({ x: 0, y: 0 });
+  // LIVE DATA FROM BINANCE (via Zustand)
+const price = useStore((s) => s.price);
+const depth = useStore((s) => s.depthData);
+const trades = useStore((s) => s.trades);
+const priceChangePercent = useStore((s) => s.priceChangePercent);
+const volume24h = useStore((s) => s.volume24h);
+const latency = useStore((s) => s.latency);
+
+
 
   // Futuristic loading / boot screen
   useEffect(() => {
@@ -65,12 +76,39 @@ export default function Page() {
     );
   }
 
-  const tickerItems = [
-    { label: "BTC/USDT", price: "68,120.54", change: "+0.52%" },
-    { label: "24h Volume", price: "32,410 BTC", change: "+3.1%" },
-    { label: "Latency", price: "< 1s", change: "target" },
-    { label: "Mode", price: "Simulation", change: "safe" },
-  ];
+ const tickerItems = [
+  {
+    label: "BTC/USDT",
+    value: price ? price.toFixed(2) : "—",
+    color: "white",
+  },
+  {
+    label: "",
+    value:
+      priceChangePercent > 0
+        ? `+${priceChangePercent.toFixed(2)}%`
+        : `${priceChangePercent.toFixed(2)}%`,
+    color: priceChangePercent > 0 ? "emerald" : "red",
+  },
+  {
+    label: "24h Vol",
+    value: `${(volume24h / 1000).toFixed(1)}K BTC`,
+    color: "white",
+  },
+  {
+    label: "Latency",
+    value: `${latency} ms`,
+    color: "white",
+  },
+  {
+    label: "Status",
+    value: "Connected",
+    color: "emerald",
+  },
+];
+
+
+
 
   return (
     <div className="relative overflow-hidden bg-slate-950 text-slate-50">
@@ -85,30 +123,33 @@ export default function Page() {
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-2 text-[11px] text-slate-300">
           <span className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-slate-500">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            live status (demo)
+            live status 
           </span>
           <div className="flex flex-1 flex-wrap items-center gap-4">
-            {tickerItems.map((item, i) => (
-              <div
-                key={i}
-                className="flex items-baseline gap-2 font-mono text-[11px]"
-              >
-                <span className="text-slate-400">{item.label}</span>
-                <span className="text-slate-100">{item.price}</span>
-                <span
-                  className={
-                    item.change.includes("+") || item.change === "safe"
-                      ? "text-emerald-300"
-                      : item.change === "target"
-                      ? "text-cyan-300"
-                      : "text-slate-400"
-                  }
-                >
-                  {item.change}
-                </span>
-              </div>
-            ))}
-          </div>
+  {tickerItems.map((item, i) => (
+    <div
+      key={i}
+      className="flex items-baseline gap-2 font-mono text-[11px]"
+    >
+      {item.label && (
+        <span className="text-slate-400">{item.label}</span>
+      )}
+
+      <span
+        className={
+          item.color === "emerald"
+            ? "text-emerald-300"
+            : item.color === "red"
+            ? "text-red-300"
+            : "text-slate-100"
+        }
+      >
+        {item.value}
+      </span>
+    </div>
+  ))}
+</div>
+
         </div>
       </div>
 
@@ -121,7 +162,7 @@ export default function Page() {
         <section className="z-10 flex-1 space-y-6">
           <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-500/10 px-3 py-1 text-[11px] font-medium text-emerald-200">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-            Live BTC/USDT · Simulation · Student Project
+            Live BTC/USDT
           </span>
 
           <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl md:text-5xl">
@@ -140,15 +181,25 @@ export default function Page() {
           </p>
 
           {/* Live status module */}
-          <div className="grid max-w-xl gap-3 text-[11px] text-slate-200 sm:grid-cols-3">
-            <StatusPill
-              label="Strategy engine"
-              value="ARMED"
-              tone="emerald"
-            />
-            <StatusPill label="Data feed" value="BTC/USDT" tone="cyan" />
-            <StatusPill label="" value="SIMULATION" tone="amber" />
-          </div>
+         <div className="grid max-w-xl gap-3 text-[11px] text-slate-200 sm:grid-cols-3">
+  <StatusPill
+    label="Engine"
+    value="Genetic Algorithm"
+    tone="emerald"
+  />
+  <StatusPill
+    label="Feed"
+    value="Live BTC/USDT"
+    tone="cyan"
+  />
+  <StatusPill
+    label="Status"
+    value="Operational"
+    tone="amber"
+  />
+
+</div>
+
 
           {/* BUTTONS */}
           <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -193,20 +244,7 @@ export default function Page() {
           </div>
 
           {/* SMALL STATS */}
-          <dl className="mt-4 grid max-w-xl gap-4 text-xs text-slate-300 sm:grid-cols-3 sm:text-sm">
-            <div>
-              <dt className="text-slate-400">Latency target</dt>
-              <dd className="font-mono text-emerald-300">&lt; 1s</dd>
-            </div>
-            <div>
-              <dt className="text-slate-400">Pair</dt>
-              <dd className="font-mono text-slate-100">BTC / USDT</dd>
-            </div>
-            <div>
-              <dt className="text-slate-400">Environment</dt>
-              <dd className="font-mono text-amber-300">Demo only</dd>
-            </div>
-          </dl>
+         
         </section>
 
         {/* RIGHT SIDE PARALLAX DASHBOARD PREVIEW */}
@@ -278,9 +316,9 @@ export default function Page() {
                 <span className="rounded-full bg-slate-900 px-2 py-1 text-slate-300">
                   Breakouts & pullbacks
                 </span>
-                <span className="rounded-full bg-slate-900 px-2 py-1 text-slate-300">
-                  Risk-controlled entries
-                </span>
+                
+                
+                
               </div>
             </div>
           </div>
