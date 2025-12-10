@@ -3,7 +3,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Link from "next/link";
 import DataProvider from "@/lib/DataProvider";
-
+import CookieBanner from "@/components/cookie/CookieBanner";
 
 
 
@@ -22,6 +22,7 @@ const navItems = [
   { href: "/history", label: "Bot History" },
   { href: "/guide", label: "Guide" }, // ← NEW
   { href: "/contact", label: "Contact Us" }, // ← NEW
+  { href: "/terms-of-use", label: "Terms of Use" },
 ];
 
 
@@ -149,27 +150,58 @@ export default function RootLayout({
     {children}
   </main>
 </DataProvider>
-<Toaster />
+
 
         {/* Footer */}
         <footer className="border-t border-slate-800 bg-slate-950/95">
-          <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-3 px-4 py-4 text-[11px] text-slate-400 sm:flex-row sm:items-center">
-            <div>
-              <span className="font-semibold text-slate-200">
-                Bitcoin Trading Bot
-              </span>{" "}
-              <span className="mx-1 text-slate-500">·</span>
-              <span>Student low-latency trading project</span>
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <span>BTC/USDT · Simulation · No real funds</span>
-              <span className="hidden text-slate-600 sm:inline">|</span>
-              <span className="text-slate-500">
-                Built for a Yahya Kemal College first step competition
-              </span>
-            </div>
-          </div>
-        </footer>
+  <div className="mx-auto max-w-6xl px-4 py-6 text-[11px] text-slate-400 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+
+    {/* LEFT SIDE — BRAND + TRADEMARK */}
+    <div className="space-y-1">
+      <div className="text-slate-200 font-semibold tracking-tight">
+        EGY AI — Low-Latency Trading Engine
+      </div>
+      <div className="text-slate-500">
+        ™ EGY AI is a protected trademark. All rights reserved.
+      </div>
+    </div>
+
+    {/* RIGHT SIDE — LINKS */}
+    <div className="flex flex-wrap items-center gap-4 text-[11px]">
+      <a
+        href="/terms-of-use"
+        className="hover:text-emerald-300 transition-colors"
+      >
+        Terms of Use
+      </a>
+
+      <span className="text-slate-600">│</span>
+
+      <a
+        href="/privacy"
+        className="hover:text-emerald-300 transition-colors"
+      >
+        Privacy Policy
+      </a>
+
+      <span className="text-slate-600">│</span>
+
+      <a
+        href="/contact"
+        className="hover:text-emerald-300 transition-colors"
+      >
+        Contact
+      </a>
+    </div>
+  </div>
+
+  {/* COPYRIGHT STRIP */}
+  <div className="border-t border-slate-800/70 bg-slate-950 text-center py-3 text-[10px] text-slate-600">
+    © 2025 EGY AI — All rights reserved.  
+    Protected under Berne Convention, WIPO treaties, TRIPS, DMCA, and North Macedonia Copyright Law.
+  </div>
+</footer>
+<CookieBanner />
 
         <Toaster />
       </body>
