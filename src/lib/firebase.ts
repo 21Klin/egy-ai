@@ -1,8 +1,7 @@
 // src/lib/firebase.ts
 import { initializeApp, getApps } from "firebase/app";
-import { getAnalytics, isSupported } from "firebase/analytics";
+import { getAnalytics } from "firebase/analytics";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: "egyai-89547.firebaseapp.com",
@@ -13,14 +12,18 @@ const firebaseConfig = {
   measurementId: "G-GN2NLT0423",
 };
 
-// Initialize Firebase ONCE
+// Prevent double initialization
 export const firebaseApp =
   getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-// Load analytics only when user accepts cookies
-export async function loadAnalytics() {
-  if (typeof window === "undefined") return null; // SSR-safe
+// Load analytics ONLY on client, only when called
+export const loadAnalytics = async () => {
+  if (typeof window === "undefined") return null;
 
+  const { isSupported } = await import("firebase/analytics");
   const supported = await isSupported();
-  return supported ? getAnalytics(firebaseApp) : null;
-}
+
+  if (!supported) return null;
+
+  return getAnalytics(firebaseApp);
+};

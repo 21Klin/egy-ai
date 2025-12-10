@@ -14,15 +14,16 @@ export default function CookieBanner() {
   }, []);
 
   const handleAccept = () => {
-  localStorage.setItem("cookieConsent", "accepted");
-  setVisible(false);
+    localStorage.setItem("cookieConsent", "accepted");
+    setVisible(false);
 
-  import("../../lib/firebase").then(({ analytics }) => {
+    // 👇 CORRECT IMPORT PATH
+    import("../../lib/firebase").then(async ({ loadAnalytics }) => {
+  const analytics = await loadAnalytics();
   console.log("Analytics activated:", analytics);
 });
 
-};
-
+  };
 
   const handleDecline = () => {
     localStorage.setItem("cookieConsent", "declined");
