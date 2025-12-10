@@ -16,6 +16,10 @@ export default function CookieBanner() {
   const handleAccept = () => {
     localStorage.setItem("cookieConsent", "accepted");
     setVisible(false);
+    import("../../lib/firebase").then(({ analytics }) => {
+  console.log("Analytics activated:", analytics);
+});
+
   };
 
   const handleDecline = () => {
