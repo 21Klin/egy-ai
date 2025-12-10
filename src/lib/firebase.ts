@@ -2,6 +2,7 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: "egyai-89547.firebaseapp.com",
@@ -12,12 +13,14 @@ const firebaseConfig = {
   measurementId: "G-GN2NLT0423",
 };
 
+// Initialize Firebase ONCE
 export const firebaseApp =
   getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-export const analytics =
-  typeof window !== "undefined"
-    ? await isSupported().then((supported) =>
-        supported ? getAnalytics(firebaseApp) : null
-      )
-    : null;
+// Load analytics only when user accepts cookies
+export async function loadAnalytics() {
+  if (typeof window === "undefined") return null; // SSR-safe
+
+  const supported = await isSupported();
+  return supported ? getAnalytics(firebaseApp) : null;
+}
