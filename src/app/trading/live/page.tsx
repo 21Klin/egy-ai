@@ -1,7 +1,7 @@
-export const runtime = "edge";
+
 
 "use client";
-
+export const runtime = "edge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataProvider } from "@/components/data-provider";
 import TradingChart from "@/components/trading-chart";
