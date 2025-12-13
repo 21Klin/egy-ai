@@ -1,0 +1,91 @@
+@tailwind utilities;
+
+/* ---------------------------------------------
+   GLOBAL PREMIUM ANIMATIONS FOR EGY AI
+   Clean, unified, optimized.
+---------------------------------------------- */
+
+@layer utilities {
+
+  /* ---------------------------------------------
+     FADE IN
+     Soft reveal for sections, cards, headers.
+  ---------------------------------------------- */
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+  }
+
+  @keyframes fadeIn {
+    0% { opacity: 0 }
+    100% { opacity: 1 }
+  }
+
+
+  /* ---------------------------------------------
+     FADE IN UP
+     Slight upward motion for hero text, stats, etc.
+  ---------------------------------------------- */
+  .animate-fade-in-up {
+    animation: fadeInUp 0.7s ease-out forwards;
+  }
+
+  @keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(12px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
+
+  /* ---------------------------------------------
+     DROPDOWN: FADE + SLIDE + SCALE
+     Used for user menu dropdown or modal pop.
+  ---------------------------------------------- */
+  .animate-fadeSlideIn {
+    animation: fadeSlideIn 0.25s ease-out forwards;
+  }
+
+  @keyframes fadeSlideIn {
+    0% {
+      opacity: 0;
+      transform: translateY(-6px) scale(0.96);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+
+  /* ---------------------------------------------
+     PREMIUM HOVER GLOW
+     Buttons, chips, trade cards.
+  ---------------------------------------------- */
+  .hover-glow {
+    transition: all 0.25s ease;
+  }
+
+  .hover-glow:hover {
+    box-shadow: 0 0 18px rgba(16, 185, 129, 0.25);
+    transform: translateY(-2px);
+  }
+
+
+  /* ---------------------------------------------
+     PREMIUM SCALE-UP ON MOUNT
+     For stats numbers, KPI blocks.
+  ---------------------------------------------- */
+  .animate-scale-in {
+    animation: scaleIn 0.5s cubic-bezier(0.32, 0, 0.67, 0) forwards;
+  }
+
+  @keyframes scaleIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.85);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+}

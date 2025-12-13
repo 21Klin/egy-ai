@@ -1,7 +1,8 @@
 'use client';
 
 import { create } from 'zustand';
-
+import { saveUserTrade } from "@/lib/saveUserTrade";
+import { useUserStore } from "@/lib/UserStore";
 export type Order = [string, string, string?]; // [price, quantity, cumulative?]
 
 export interface Position {
@@ -362,6 +363,18 @@ export const useStore = create<AppState & AppActions>((set, get) => ({
         usdtBalance: state.usdtBalance - amt,
         btcBalance: state.btcBalance + btc,
       }));
+       // SAVE TRADE IF USER IS LOGGED IN 12/11/2025
+      const uid = useUserStore.getState().user?.uid;
+    if (uid) {
+      saveUserTrade(uid, {
+  tradeType: "manual",
+  timestamp: Date.now(),
+  side: "BUY",
+  price,
+  size: btc,
+});
+
+    }
     }
   },
 
@@ -374,8 +387,20 @@ export const useStore = create<AppState & AppActions>((set, get) => ({
         usdtBalance: state.usdtBalance + usd,
         btcBalance: state.btcBalance - amt,
       }));
+   // SAVE TRADE IF USER IS LOGGED IN 12/11/2025
+    const uid = useUserStore.getState().user?.uid;
+    if (uid) {
+      saveUserTrade(uid, {
+  tradeType: "manual",
+  timestamp: Date.now(),
+  side: "SELL",
+  price,
+  size: amt,
+});
+
     }
-  },
+  }
+},
 
   setLeverage: (leverage) => set({ leverage }),
   setPositionSize: (size) =>
@@ -386,47 +411,74 @@ export const useStore = create<AppState & AppActions>((set, get) => ({
   // ==== FRONTEND GA BOT ====
 
   simulateGABotTrade: () => {
-    const {
-      price,
-      usdtBalance,
-      btcBalance,
-      buyBtc,
-      sellBtc,
-      addBotHistoryEntry,
-    } = get();
+  const {
+    price,
+    usdtBalance,
+    btcBalance,
+    buyBtc,
+    sellBtc,
+    addBotHistoryEntry,
+  } = get();
 
-    if (price <= 0) return;
+  if (price <= 0) return;
 
-    const direction = Math.random() < 0.5 ? 'buy' : 'sell';
-    const tradeUsd = 1 + Math.random() * 199;
+  const direction = Math.random() < 0.5 ? "buy" : "sell";
+  const tradeUsd = 1 + Math.random() * 199;
 
-    if (direction === 'buy') {
-      const amt = Math.min(tradeUsd, usdtBalance);
-      if (amt > 1) {
-        const btc = amt / price;
-        buyBtc(amt);
-        addBotHistoryEntry({
-          time: Date.now(),
-          side: 'BUY',
-          price,
-          size: btc,
-        });
-      }
-    } else {
-      if (btcBalance <= 0) return;
-      const desired = tradeUsd / price;
-      const btc = Math.min(desired, btcBalance);
-      if (btc > 0) {
-        sellBtc(btc);
-        addBotHistoryEntry({
-          time: Date.now(),
-          side: 'SELL',
-          price,
-          size: btc,
-        });
+  const uid = useUserStore.getState().user?.uid;
+
+  if (direction === "buy") {
+    const amt = Math.min(tradeUsd, usdtBalance);
+    if (amt > 1) {
+      const btc = amt / price;
+      buyBtc(amt);
+
+      addBotHistoryEntry({
+        time: Date.now(),
+        side: "BUY",
+        price,
+        size: btc,
+      });
+
+      if (uid) {
+        saveUserTrade(uid, {
+  tradeType: "bot",
+  timestamp: Date.now(),
+  side: "BUY",
+  price,
+  size: btc,
+});
+
       }
     }
-  },
+  } else {
+    if (btcBalance <= 0) return;
+    const desired = tradeUsd / price;
+    const btc = Math.min(desired, btcBalance);
+    if (btc > 0) {
+      sellBtc(btc);
+
+      addBotHistoryEntry({
+        time: Date.now(),
+        side: "SELL",
+        price,
+        size: btc,
+      });
+
+      if (uid) {
+        saveUserTrade(uid, {
+  tradeType: "bot",
+  timestamp: Date.now(),
+  side: "SELL",
+  price,
+  size: btc,
+});
+
+      }
+    }
+  }
+},
+
 
   // ==== GA ENGINE ====
 
